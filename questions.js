@@ -1,4 +1,146 @@
-export const questions = // --- MEGA BLOCO: VENDAS E NEGOCIAÇÃO (FOCO PARETO 80/20) ---
+export const questions = // --- BLOCO INICIAL: INFORMÁTICA E TRANSFORMAÇÃO DIGITAL (PESO PARETO) ---
+{
+    id: 111,
+    subject: "Informática",
+    text: "No contexto de Inteligência Artificial, o que caracteriza o 'Machine Learning' (Aprendizado de Máquina), citado no edital?",
+    options: [
+        "Um sistema que funciona apenas com comandos manuais do usuário.",
+        "A capacidade de um sistema melhorar seu desempenho em uma tarefa específica através da exposição a dados, sem ser explicitamente programado para cada passo.",
+        "O uso de robôs físicos para realizar o atendimento nas agências bancárias.",
+        "Uma técnica de digitação ultra-rápida utilizada por bancários.",
+        "O ato de desligar os computadores à noite para economizar energia."
+    ],
+    correct: 1,
+    explanation: "Machine Learning permite que os sistemas do banco (como o que detecta fraudes) aprendam padrões com os dados históricos."
+},
+{
+    id: 112,
+    subject: "Informática",
+    text: "O edital menciona 'Big Data'. Quais são os três pilares (3 Vs) fundamentais que definem esse conceito?",
+    options: [
+        "Vontade, Valor e Verdade.",
+        "Velocidade, Volume e Variedade.",
+        "Venda, Verificação e Validade.",
+        "Virtualização, Voltagem e Vetor.",
+        "Visibilidade, Vigilância e Vantagem."
+    ],
+    correct: 1,
+    explanation: "Big Data refere-se a grandes volumes de dados, gerados em alta velocidade e com grande variedade de formatos."
+},
+{
+    id: 113,
+    subject: "Informática",
+    text: "Sobre segurança da informação, o que é um ataque de 'Phishing'?",
+    options: [
+        "Um vírus que queima o hardware do computador.",
+        "Uma técnica de engenharia social para enganar usuários e obter dados confidenciais através de mensagens falsas.",
+        "O ato de atualizar o antivírus regularmente.",
+        "Um tipo de cabo de rede de alta velocidade.",
+        "A criação de senhas fortes com mais de 12 caracteres."
+    ],
+    correct: 1,
+    explanation: "O Phishing 'pesca' os dados do cliente através de e-mails ou SMS que fingem ser do Banco do Brasil."
+},
+{
+    id: 114,
+    subject: "Informática",
+    text: "A 'Criptografia de Chave Simétrica' utiliza:",
+    options: [
+        "Duas chaves diferentes: uma pública e uma privada.",
+        "A mesma chave para criptografar e descriptografar a informação.",
+        "Nenhuma chave, apenas uma senha de texto simples.",
+        "Apenas biometria facial.",
+        "Uma chave que muda a cada 5 segundos automaticamente."
+    ],
+    correct: 1,
+    explanation: "Na criptografia simétrica, emissor e receptor compartilham a mesma chave secreta."
+},
+{
+    id: 115,
+    subject: "Informática",
+    text: "O conceito de 'Computação em Nuvem' (Cloud Computing) do tipo SaaS (Software as a Service) é exemplificado por:",
+    options: [
+        "A compra de um servidor físico para a agência.",
+        "O uso de aplicativos como o Microsoft 365 ou o Google Workspace diretamente no navegador.",
+        "A instalação de um sistema operacional via CD-ROM.",
+        "A criação de um banco de dados em um HD externo.",
+        "O conserto de um monitor quebrado."
+    ],
+    correct: 1,
+    explanation: "SaaS é quando o usuário consome o software como um serviço online, sem precisar instalar ou gerenciar infraestrutura."
+},
+{
+    id: 116,
+    subject: "Informática",
+    text: "O edital cita 'Internet das Coisas' (IoT). Como isso se aplica ao setor bancário?",
+    options: [
+        "Apenas no uso de computadores de mesa mais potentes.",
+        "Na conexão de dispositivos (como máquinas de cartão, sensores e wearables) à internet para gerar dados e facilitar pagamentos.",
+        "Na obrigatoriedade de ter Wi-Fi grátis em todas as agências.",
+        "No uso de impressoras que não utilizam tinta.",
+        "Não existe aplicação de IoT em bancos."
+    ],
+    correct: 1,
+    explanation: "IoT permite que objetos físicos coletem e transmitam dados, como o uso de smartwatches para pagamentos por aproximação."
+},
+{
+    id: 117,
+    subject: "Informática",
+    text: "O que é 'Ransomware'?",
+    options: [
+        "Um software que acelera a conexão com a internet.",
+        "Um tipo de malware que sequestra os dados (criptografando-os) e exige um resgate para liberá-los.",
+        "Um buscador de preços baixos em sites de compras.",
+        "O sistema oficial de transferências do Banco Central.",
+        "Uma ferramenta de edição de planilhas."
+    ],
+    correct: 1,
+    explanation: "Ransomware é um ataque de 'sequestro' digital, muito combatido pelas equipes de segurança bancária."
+},
+{
+    id: 118,
+    subject: "Informática",
+    text: "Em relação ao Microsoft Windows 10/11, o atalho 'Windows + L' serve para:",
+    options: [
+        "Abrir o navegador de internet.",
+        "Bloquear o computador ou alternar entre usuários.",
+        "Limpar a lixeira automaticamente.",
+        "Listar todos os arquivos da pasta Documentos.",
+        "Ligar a lanterna do notebook."
+    ],
+    correct: 1,
+    explanation: "Atalhos de sistema são recorrentes em provas. Windows + L (Lock) bloqueia a sessão do usuário."
+},
+{
+    id: 119,
+    subject: "Informática",
+    text: "No Microsoft Excel, a função utilizada para somar valores dentro de um intervalo que atendem a um critério específico é:",
+    options: [
+        "=SOMA()",
+        "=SOMASE()",
+        "=CONT.SE()",
+        "=PROCV()",
+        "=MÉDIA()"
+    ],
+    correct: 1,
+    explanation: "O SOMASE permite somar apenas os valores que cumprem uma condição (ex: somar apenas vendas de 'Seguros')."
+},
+{
+    id: 120,
+    subject: "Informática",
+    text: "O termo 'Deep Web' refere-se a:",
+    options: [
+        "Uma rede social secreta para funcionários de bancos.",
+        "A parte da internet que não é indexada pelos mecanismos de busca comuns (como o Google).",
+        "A internet ultra-rápida via fibra óptica.",
+        "Sites de notícias falsas exclusivamente.",
+        "A página de login do aplicativo do Banco do Brasil."
+    ],
+    correct: 1,
+    explanation: "A Deep Web contém conteúdos (como bases de dados acadêmicas ou registros médicos) que não aparecem em buscas públicas."
+}
+    
+    // --- MEGA BLOCO: VENDAS E NEGOCIAÇÃO (FOCO PARETO 80/20) ---
 {
     id: 101,
     subject: "Vendas e Negociação",
