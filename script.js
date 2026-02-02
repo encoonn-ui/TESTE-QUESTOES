@@ -1,229 +1,125 @@
 import { questions } from './questions.js';
 
-// --- ESTADO DO USUÁRIO ---
 let xp = parseInt(localStorage.getItem('userXP')) || 0;
-let streak = parseInt(localStorage.getItem('userStreak')) || 0;
 let answeredIds = JSON.parse(localStorage.getItem('answeredIds')) || [];
-let history = []; // Histórico para botão voltar
-let timerInterval;
+let history = [];
 
-// --- CONFIGURAÇÃO PARETO (PESOS) ---
-const paretoWeights = {
-    "Vendas e Negociação": 10,
-    "Informática": 10,
-    "Conhecimentos Bancários": 5,
-    "Atualidades do Mercado Financeiro": 3,
-    "Matemática Financeira": 2
-};
+// LISTA DE TEMAS IMPREVISÍVEIS (Brasil Real, ENEM e Aleatórios)
+const temasRedacao = [
+    "O impacto do envelhecimento da população brasileira na economia e no mercado de trabalho.",
+    "Caminhos para combater a persistência da violência contra a mulher na sociedade brasileira.",
+    "O papel da educação financeira como ferramenta de transformação social no Brasil.",
+    "A influência das notícias falsas (fake news) no exercício da democracia contemporânea.",
+    "Desafios para a valorização de comunidades e povos tradicionais no território brasileiro.",
+    "A ética no uso da inteligência artificial: entre o progresso e a invasão de privacidade.",
+    "O estigma associado às doenças mentais na sociedade brasileira contemporânea.",
+    "Impactos da cultura do cancelamento nas relações humanas e na liberdade de expressão.",
+    "O desafio de garantir o acesso à água potável frente às mudanças climáticas.",
+    "A importância da preservação da memória histórica para a construção da identidade nacional."
+];
 
-// --- INICIALIZAÇÃO ---
 function init() {
     updateStats();
     loadRandomQuestion();
-    setupTimer();
-    renderProgressPanel();
-
-    // Evento Botão Voltar
-    document.getElementById('prev-btn').onclick = () => {
-        if (history.length > 0) {
-            // Remove a atual (que acabou de ser gerada)
-            const current = history.pop(); 
-            // Pega a anterior, se existir
-            if (history.length > 0) {
-                const previous = history[history.length - 1];
-                renderQuestion(previous, false); // false para não duplicar no histórico
-            } else {
-                alert("Início do histórico alcançado.");
-                history.push(current); // Devolve a atual se não tiver pra onde voltar
-            }
-        }
-    };
+    sortearTema(); // Sorteia um tema ao carregar
 }
 
-// --- LÓGICA DE PERGUNTAS (PARETO) ---
+// SORTEADOR DE TEMAS
+window.sortearTema = () => {
+    const temaElement = document.getElementById('tema-redacao');
+    const temaSorteado = temasRedacao[Math.floor(Math.random() * temasRedacao.length)];
+    temaElement.innerText = "TEMA: " + temaSorteado;
+};
+
+// --- LÓGICA DE QUESTÕES (PARETO) ---
 function loadRandomQuestion() {
     const available = questions.filter(q => !answeredIds.includes(q.id));
-    
     if (available.length === 0) {
-        document.getElementById('question-text').innerText = "MISSÃO CUMPRIDA! VOCÊ ZEROU O EDITAL!";
-        document.getElementById('options-container').innerHTML = "";
+        document.getElementById('question-text').innerText = "MISSÃO CUMPRIDA!";
         return;
     }
-
-    // Algoritmo de Sorteio Ponderado (Pareto)
-    let weightedPool = [];
-    available.forEach(q => {
-        const weight = paretoWeights[q.subject] || 1;
-        for (let i = 0; i < weight; i++) {
-            weightedPool.push(q);
-        }
-    });
-
-    const q = weightedPool[Math.floor(Math.random() * weightedPool.length)];
-    renderQuestion(q, true);
+    const q = available[Math.floor(Math.random() * available.length)];
+    renderQuestion(q);
 }
 
-function renderQuestion(q, addToHistory) {
-    if (addToHistory) history.push(q);
+function renderQuestion(q) {
+    history.push(q);
+    const container = document.getElementById('options-container');
+    document.getElementById('question-text').innerText = q.text;
+    document.getElementById('subject-tag').innerText = q.subject;
+    document.getElementById('feedback-area').classList.add('hidden');
+    container.innerHTML = '';
 
-    const ui = {
-        text: document.getElementById('question-text'),
-        tag: document.getElementById('subject-tag'),
-        opts: document.getElementById('options-container'),
-        feedback: document.getElementById('feedback-area')
-    };
-
-    ui.text.innerText = q.text;
-    ui.tag.innerText = q.subject;
-    ui.feedback.classList.add('hidden');
-    ui.opts.innerHTML = '';
-
-    q.options.forEach((opt, index) => {
+    q.options.forEach((opt, i) => {
         const btn = document.createElement('button');
         btn.className = 'option-btn';
         btn.innerText = opt;
-        btn.onclick = () => checkAnswer(index, q, btn);
-        ui.opts.appendChild(btn);
+        btn.onclick = () => checkAnswer(i, q, btn);
+        container.appendChild(btn);
     });
 }
 
-function checkAnswer(selectedIndex, q, btnElement) {
-    const isCorrect = selectedIndex === q.correct;
-    const feedbackMsg = document.getElementById('feedback-message');
-    const feedbackStatus = document.getElementById('feedback-status');
-    const soundCorrect = document.getElementById('sound-correct');
-    const soundWrong = document.getElementById('sound-wrong');
-
-    // Desativa cliques
-    const allBtns = document.querySelectorAll('.option-btn');
-    allBtns.forEach(b => b.disabled = true);
+function checkAnswer(idx, q, btn) {
+    const isCorrect = idx === q.correct;
+    const sound = document.getElementById(isCorrect ? 'sound-correct' : 'sound-wrong');
+    sound.currentTime = 0;
+    sound.play().catch(() => {});
 
     if (isCorrect) {
-        btnElement.classList.add('correct');
-        feedbackStatus.innerText = "LEVEL UP!";
-        feedbackStatus.style.color = "var(--correct)";
-        soundCorrect.currentTime = 0;
-        soundCorrect.play().catch(e => console.log(e));
-        
+        btn.classList.add('correct');
         xp += 50;
-        streak += 1; // Incrementa ofensiva simples
-        
-        // Salva ID para não repetir
-        if(!answeredIds.includes(q.id)) {
-            answeredIds.push(q.id);
-            localStorage.setItem('answeredIds', JSON.stringify(answeredIds));
-        }
+        answeredIds.push(q.id);
+        localStorage.setItem('answeredIds', JSON.stringify(answeredIds));
     } else {
-        btnElement.classList.add('wrong');
-        // Mostra a correta
-        allBtns[q.correct].classList.add('correct');
-        feedbackStatus.innerText = "GAME OVER";
-        feedbackStatus.style.color = "var(--wrong)";
-        soundWrong.currentTime = 0;
-        soundWrong.play().catch(e => console.log(e));
-        streak = 0; // Reseta ofensiva
+        btn.classList.add('wrong');
+        document.querySelectorAll('.option-btn')[q.correct].classList.add('correct');
     }
-
-    feedbackMsg.innerText = q.explanation;
+    document.getElementById('feedback-message').innerText = q.explanation;
     document.getElementById('feedback-area').classList.remove('hidden');
-    
     updateStats();
 }
 
-// --- ESTATÍSTICAS E UI ---
 function updateStats() {
     document.getElementById('xp-counter').innerText = xp;
-    document.getElementById('streak-counter').innerText = streak;
     localStorage.setItem('userXP', xp);
-    localStorage.setItem('userStreak', streak);
-    
-    // Atualiza barra de XP global (ex: nível a cada 1000xp)
-    const progress = (xp % 1000) / 10; 
-    document.getElementById('progress-bar').style.width = `${progress}%`;
-    
-    renderProgressPanel();
 }
 
-function renderProgressPanel() {
-    const list = document.getElementById('subject-progress-list');
-    list.innerHTML = '';
-    
-    // Pega todas as matérias únicas
-    const subjects = [...new Set(questions.map(q => q.subject))];
-
-    subjects.forEach(sub => {
-        const total = questions.filter(q => q.subject === sub).length;
-        const done = questions.filter(q => q.subject === sub && answeredIds.includes(q.id)).length;
-        const pct = total > 0 ? (done / total) * 100 : 0;
-        
-        // Verifica se é prioridade alta
-        const isPriority = (paretoWeights[sub] || 0) >= 10; 
-
-        list.innerHTML += `
-            <div class="subject-progress-item" data-priority="${isPriority ? 'high' : 'normal'}">
-                <div style="display:flex; justify-content:space-between">
-                    <span>${sub}</span>
-                    <span>${Math.round(pct)}%</span>
-                </div>
-                <div class="mini-bar-bg">
-                    <div class="mini-bar-fill" style="width:${pct}%"></div>
-                </div>
-            </div>
-        `;
-    });
-}
-
-// --- CRONÔMETRO POMODORO ---
-function setupTimer() {
-    const btn = document.getElementById('start-timer');
-    const display = document.getElementById('timer-display');
-    let timeLeft = 25 * 60;
-    let isRunning = false;
-
-    btn.onclick = () => {
-        if (isRunning) return;
-        isRunning = true;
-        timerInterval = setInterval(() => {
-            let m = Math.floor(timeLeft / 60);
-            let s = timeLeft % 60;
-            display.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-            
-            if (timeLeft <= 0) {
-                clearInterval(timerInterval);
-                alert("Tempo esgotado! Descanse 5 min.");
-                xp += 100;
-                updateStats();
-                isRunning = false;
-            }
-            timeLeft--;
-        }, 1000);
-    };
-}
-
-// --- API GEMINI (REDAÇÃO) ---
+// --- CORREÇÃO DE REDAÇÃO COM IA (ESTILO RIGOROSO) ---
 async function avaliarRedacao() {
     const texto = document.getElementById('redacao-input').value;
+    const temaAtual = document.getElementById('tema-redacao').innerText;
     const analysisDiv = document.getElementById('ai-analysis');
     const feedbackDiv = document.getElementById('redacao-feedback');
     const btn = document.getElementById('avaliar-btn');
 
-    // !!! IMPORTANTE: COLOQUE SUA CHAVE AQUI !!!
+    // COLOQUE SUA CHAVE API AQUI
     const API_KEY = "AIzaSyAn6iFEqw9Ka39SeEwUVKvI23TEs7WuCe0"; 
 
-    if (texto.length < 50) {
-        alert("Texto muito curto para avaliação.");
+    if (texto.length < 100) {
+        alert("Texto muito curto! Para uma redação de concurso, desenvolva ao menos 100 caracteres para teste.");
         return;
     }
 
-    if (API_KEY === "SUA_CHAVE_API_AQUI") {
-        alert("Você precisa inserir sua chave API no arquivo script.js!");
-        return;
-    }
-
-    btn.innerText = "PROCESSANDO...";
+    btn.innerText = "IA ANALISANDO ESTRUTURA...";
     btn.disabled = true;
 
-    const prompt = `Atue como corretor da banca Cesgranrio (Banco do Brasil). Avalie: "${texto}". Dê nota 0-100 e 3 dicas curtas.`;
+    // PROMPT RIGOROSO: Foco em Estrutura e Nota Máxima
+    const prompt = `Aja como um avaliador rigoroso de redações de concursos e ENEM. 
+    Analise o texto abaixo considerando o ${temaAtual}.
+    
+    CRITÉRIOS DE AVALIAÇÃO:
+    1. Norma Culta (Gramática e Ortografia).
+    2. Estrutura Dissertativa-Argumentativa (Introdução, Desenvolvimento e Conclusão).
+    3. Coesão (Uso de conectivos) e Coerência.
+    4. Argumentação (Lógica e profundidade).
+
+    TEXTO: "${texto}"
+
+    FORNEÇA O RESULTADO NESTE FORMATO:
+    - NOTA FINAL: (0 a 100)
+    - ANÁLISE ESTRUTURAL: (Comente sobre introdução, desenvolvimento e conclusão)
+    - ERROS DE PORTUGUÊS: (Liste os principais)
+    - DICAS PARA NOTA MÁXIMA: (O que faltou para o 100?)`;
 
     try {
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
@@ -237,12 +133,11 @@ async function avaliarRedacao() {
         
         analysisDiv.innerText = resultado;
         feedbackDiv.classList.remove('hidden');
-        xp += 150;
+        xp += 200;
         updateStats();
 
     } catch (error) {
-        console.error(error);
-        analysisDiv.innerText = "Erro ao conectar com a IA. Verifique a chave API ou sua internet.";
+        analysisDiv.innerText = "Erro ao conectar com a IA. Verifique sua chave API.";
         feedbackDiv.classList.remove('hidden');
     } finally {
         btn.innerText = "ENVIAR PARA AVALIAÇÃO (IA)";
@@ -250,15 +145,8 @@ async function avaliarRedacao() {
     }
 }
 
-// Funções Globais para o HTML acessar
 window.nextQuestion = () => loadRandomQuestion();
-window.resetProgress = () => {
-    if(confirm("Tem certeza que quer zerar todo seu progresso?")) {
-        localStorage.clear();
-        location.reload();
-    }
-};
 window.avaliarRedacao = avaliarRedacao;
+window.resetProgress = () => { localStorage.clear(); location.reload(); };
 
-// Inicia
 init();
