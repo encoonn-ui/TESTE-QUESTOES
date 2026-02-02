@@ -4,8 +4,8 @@ import { questions } from './questions.js';
 let xp = parseInt(localStorage.getItem('userXP')) || 0;
 let streak = parseInt(localStorage.getItem('userStreak')) || 0;
 let answeredIds = JSON.parse(localStorage.getItem('answeredIds')) || [];
-let historyIds = JSON.parse(sessionStorage.getItem('historyIds')) || []; // Histórico para o botão voltar
-let currentQuestionId = localStorage.getItem('currentQuestionId'); // TRAVA da questão atual
+let historyIds = JSON.parse(sessionStorage.getItem('historyIds')) || []; 
+let currentQuestionId = localStorage.getItem('currentQuestionId'); 
 
 const paretoWeights = { 
     "Vendas e Negociação": 15, 
@@ -18,7 +18,6 @@ const paretoWeights = {
 function init() {
     updateStats();
     
-    // Lógica de Trava: Se já existe uma questão salva, carrega ela. Se não, sorteia.
     if (currentQuestionId) {
         const savedQ = questions.find(q => q.id == currentQuestionId);
         if (savedQ && !answeredIds.includes(savedQ.id)) {
@@ -35,11 +34,10 @@ function init() {
 }
 
 function setupNavigation() {
-    // BOTÃO VOLTAR: Agora ele busca no histórico de IDs a questão anterior
     document.getElementById('prev-btn').onclick = () => {
         if (historyIds.length > 1) {
-            historyIds.pop(); // Remove a atual
-            const prevId = historyIds[historyIds.length - 1]; // Pega a anterior
+            historyIds.pop(); 
+            const prevId = historyIds[historyIds.length - 1]; 
             const prevQ = questions.find(q => q.id == prevId);
             if (prevQ) {
                 localStorage.setItem('currentQuestionId', prevQ.id);
@@ -67,11 +65,8 @@ function loadRandomQuestion() {
     });
 
     const q = weightedPool[Math.floor(Math.random() * weightedPool.length)];
-    
-    // SALVA A QUESTÃO ATUAL (Blindagem contra F5)
     localStorage.setItem('currentQuestionId', q.id);
     
-    // Adiciona ao histórico para o botão voltar
     if (historyIds[historyIds.length - 1] !== q.id) {
         historyIds.push(q.id);
         sessionStorage.setItem('historyIds', JSON.stringify(historyIds));
@@ -96,26 +91,36 @@ function renderQuestion(q) {
     });
 }
 
+// --- LÓGICA DE CORREÇÃO ATUALIZADA (Sua nova solicitação) ---
 function checkAnswer(idx, q, btn) {
     const isCorrect = idx === q.correct;
     const sound = document.getElementById(isCorrect ? 'sound-correct' : 'sound-wrong');
+    const feedbackArea = document.getElementById('feedback-area');
+    const feedbackStatus = document.getElementById('feedback-status');
+    
     sound.currentTime = 0;
     sound.play().catch(() => {});
 
     if (isCorrect) {
+        // CENÁRIO ACERTO: Sinaliza botão e ABRE o overlay de resumo
         btn.classList.add('correct');
+        feedbackStatus.innerHTML = '<span class="material-icons" style="vertical-align: middle;">check_circle</span> RESPOSTA';
+        feedbackStatus.style.color = "var(--correct)";
+        
+        document.getElementById('feedback-message').innerText = q.explanation;
+        feedbackArea.classList.remove('hidden'); // Mostra a tela de resumo
+        
         xp += 50;
         streak += 1;
         answeredIds.push(q.id);
-        localStorage.removeItem('currentQuestionId'); // Libera para a próxima
+        localStorage.removeItem('currentQuestionId'); 
     } else {
+        // CENÁRIO ERRO: Apenas sinaliza no botão e toca o som
         btn.classList.add('wrong');
         streak = 0;
-        document.querySelectorAll('.option-btn')[q.correct].classList.add('correct');
+        // Não removemos o 'hidden' do feedback-area aqui para não abrir a imagem de sucesso
     }
 
-    document.getElementById('feedback-message').innerText = q.explanation;
-    document.getElementById('feedback-area').classList.remove('hidden');
     updateStats();
 }
 
@@ -170,7 +175,6 @@ window.resetProgress = () => {
     }
 };
 
-// --- API REDAÇÃO ---
 window.avaliarRedacao = async () => {
     const texto = document.getElementById('redacao-input').value;
     const API_KEY = "AIzaSyAn6iFEqw9Ka39SeEwUVKvI23TEs7WuCe0"; 
