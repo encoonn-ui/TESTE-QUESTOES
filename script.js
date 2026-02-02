@@ -1,10 +1,21 @@
 import { questions } from './questions.js';
 
+// --- ESTADO DO USUÁRIO ---
 let xp = parseInt(localStorage.getItem('userXP')) || 0;
+let streak = parseInt(localStorage.getItem('userStreak')) || 0; // Adicionado Streak
 let answeredIds = JSON.parse(localStorage.getItem('answeredIds')) || [];
 let history = [];
 
-// LISTA DE TEMAS IMPREVISÍVEIS (Brasil Real, ENEM e Aleatórios)
+// --- CONFIGURAÇÃO PARETO (PESOS DO EDITAL BB) ---
+const paretoWeights = { 
+    "Vendas e Negociação": 15, 
+    "Informática": 15, 
+    "Conhecimentos Bancários": 10,
+    "Matemática Financeira": 5,
+    "Atualidades do Mercado Financeiro": 5
+};
+
+// LISTA DE TEMAS IMPREVISÍVEIS
 const temasRedacao = [
     "O impacto do envelhecimento da população brasileira na economia e no mercado de trabalho.",
     "Caminhos para combater a persistência da violência contra a mulher na sociedade brasileira.",
@@ -21,7 +32,7 @@ const temasRedacao = [
 function init() {
     updateStats();
     loadRandomQuestion();
-    sortearTema(); // Sorteia um tema ao carregar
+    sortearTema(); 
 }
 
 // SORTEADOR DE TEMAS
@@ -31,14 +42,25 @@ window.sortearTema = () => {
     temaElement.innerText = "TEMA: " + temaSorteado;
 };
 
-// --- LÓGICA DE QUESTÕES (PARETO) ---
+// --- LÓGICA DE QUESTÕES (COM ALGORITMO PARETO) ---
 function loadRandomQuestion() {
     const available = questions.filter(q => !answeredIds.includes(q.id));
+    
     if (available.length === 0) {
-        document.getElementById('question-text').innerText = "MISSÃO CUMPRIDA!";
+        document.getElementById('question-text').innerText = "MISSÃO CUMPRIDA! VOCÊ DOMINOU O EDITAL!";
         return;
     }
-    const q = available[Math.floor(Math.random() * available.length)];
+
+    // Aplica o peso de Pareto no sorteio
+    let weightedPool = [];
+    available.forEach(q => {
+        const weight = paretoWeights[q.subject] || 1;
+        for (let i = 0; i < weight; i++) {
+            weightedPool.push(q);
+        }
+    });
+
+    const q = weightedPool[Math.floor(Math.random() * weightedPool.length)];
     renderQuestion(q);
 }
 
@@ -68,23 +90,70 @@ function checkAnswer(idx, q, btn) {
     if (isCorrect) {
         btn.classList.add('correct');
         xp += 50;
+        streak += 1;
         answeredIds.push(q.id);
         localStorage.setItem('answeredIds', JSON.stringify(answeredIds));
     } else {
         btn.classList.add('wrong');
-        document.querySelectorAll('.option-btn')[q.correct].classList.add('correct');
+        streak = 0; // Quebra o fogo se errar
+        const allBtns = document.querySelectorAll('.option-btn');
+        allBtns[q.correct].classList.add('correct');
     }
     document.getElementById('feedback-message').innerText = q.explanation;
     document.getElementById('feedback-area').classList.remove('hidden');
     updateStats();
 }
 
+// --- ATUALIZAÇÃO VISUAL (XP, BARRAS E MATÉRIAS) ---
 function updateStats() {
+    // Atualiza números básicos
     document.getElementById('xp-counter').innerText = xp;
+    if(document.getElementById('streak-counter')) {
+        document.getElementById('streak-counter').innerText = streak;
+    }
+    
     localStorage.setItem('userXP', xp);
+    localStorage.setItem('userStreak', streak);
+
+    // Barra de XP do Topo (Nível a cada 1000 XP)
+    const progressBarTop = document.getElementById('progress-bar-top');
+    if(progressBarTop) {
+        const levelProgress = (xp % 1000) / 10;
+        progressBarTop.style.width = `${levelProgress}%`;
+    }
+
+    renderSubjectProgress();
 }
 
-// --- CORREÇÃO DE REDAÇÃO COM IA (ESTILO RIGOROSO) ---
+function renderSubjectProgress() {
+    const list = document.getElementById('subject-progress-list');
+    if(!list) return; // Segurança caso o elemento não exista no HTML
+    
+    list.innerHTML = '';
+    const subjects = [...new Set(questions.map(q => q.subject))];
+
+    subjects.forEach(sub => {
+        const total = questions.filter(q => q.subject === sub).length;
+        const done = questions.filter(q => q.subject === sub && answeredIds.includes(q.id)).length;
+        const pct = Math.round((done / total) * 100) || 0;
+        
+        // Verifica se é matéria de alto peso (Pareto)
+        const isHighPriority = (paretoWeights[sub] || 0) >= 10;
+
+        list.innerHTML += `
+            <div class="subject-progress-item" ${isHighPriority ? 'data-priority="high"' : ''}>
+                <div style="display:flex; justify-content:space-between; margin-bottom: 2px;">
+                    <span style="${isHighPriority ? 'color: var(--primary); font-weight: bold;' : ''}">${sub}</span>
+                    <span>${pct}%</span>
+                </div>
+                <div class="mini-bar-bg">
+                    <div class="mini-bar-fill" style="width:${pct}%; background: ${isHighPriority ? 'var(--primary)' : '#555'}"></div>
+                </div>
+            </div>`;
+    });
+}
+
+// --- CORREÇÃO DE REDAÇÃO COM IA ---
 async function avaliarRedacao() {
     const texto = document.getElementById('redacao-input').value;
     const temaAtual = document.getElementById('tema-redacao').innerText;
@@ -92,34 +161,21 @@ async function avaliarRedacao() {
     const feedbackDiv = document.getElementById('redacao-feedback');
     const btn = document.getElementById('avaliar-btn');
 
-    // COLOQUE SUA CHAVE API AQUI
+    // SUA CHAVE API
     const API_KEY = "AIzaSyAn6iFEqw9Ka39SeEwUVKvI23TEs7WuCe0"; 
 
     if (texto.length < 100) {
-        alert("Texto muito curto! Para uma redação de concurso, desenvolva ao menos 100 caracteres para teste.");
+        alert("Texto muito curto para avaliação.");
         return;
     }
 
-    btn.innerText = "IA ANALISANDO ESTRUTURA...";
+    btn.innerText = "IA ANALISANDO...";
     btn.disabled = true;
 
-    // PROMPT RIGOROSO: Foco em Estrutura e Nota Máxima
-    const prompt = `Aja como um avaliador rigoroso de redações de concursos e ENEM. 
-    Analise o texto abaixo considerando o ${temaAtual}.
-    
-    CRITÉRIOS DE AVALIAÇÃO:
-    1. Norma Culta (Gramática e Ortografia).
-    2. Estrutura Dissertativa-Argumentativa (Introdução, Desenvolvimento e Conclusão).
-    3. Coesão (Uso de conectivos) e Coerência.
-    4. Argumentação (Lógica e profundidade).
-
-    TEXTO: "${texto}"
-
-    FORNEÇA O RESULTADO NESTE FORMATO:
-    - NOTA FINAL: (0 a 100)
-    - ANÁLISE ESTRUTURAL: (Comente sobre introdução, desenvolvimento e conclusão)
-    - ERROS DE PORTUGUÊS: (Liste os principais)
-    - DICAS PARA NOTA MÁXIMA: (O que faltou para o 100?)`;
+    const prompt = `Aja como um avaliador rigoroso de redações de concursos (Banca Cesgranrio). 
+    Analise o texto considerando o ${temaAtual}.
+    Forneça: NOTA (0-100), ANÁLISE ESTRUTURAL e ERROS GRAMATAIS.
+    TEXTO: "${texto}"`;
 
     try {
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
@@ -133,11 +189,11 @@ async function avaliarRedacao() {
         
         analysisDiv.innerText = resultado;
         feedbackDiv.classList.remove('hidden');
-        xp += 200;
+        xp += 200; // Bônus de redação
         updateStats();
 
     } catch (error) {
-        analysisDiv.innerText = "Erro ao conectar com a IA. Verifique sua chave API.";
+        analysisDiv.innerText = "Erro na conexão com a IA.";
         feedbackDiv.classList.remove('hidden');
     } finally {
         btn.innerText = "ENVIAR PARA AVALIAÇÃO (IA)";
@@ -147,6 +203,6 @@ async function avaliarRedacao() {
 
 window.nextQuestion = () => loadRandomQuestion();
 window.avaliarRedacao = avaliarRedacao;
-window.resetProgress = () => { localStorage.clear(); location.reload(); };
+window.resetProgress = () => { if(confirm("Zerar tudo?")) { localStorage.clear(); location.reload(); } };
 
 init();
