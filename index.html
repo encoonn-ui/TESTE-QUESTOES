@@ -66,14 +66,20 @@
                 </div>
 
                 <div class="game-card redação-section" style="margin-top: 30px;">
-                    <h3 class="neon-text">MISSÃO: REDAÇÃO OFICIAL</h3>
-                    <p class="game-tag">TEMA: O papel dos bancos na cidadania financeira</p>
-                    <textarea id="redacao-input" placeholder="Digite ou cole seu texto aqui (mínimo 15 linhas)..." rows="10"></textarea>
+                    <h3 class="neon-text">MISSÃO: REDAÇÃO (TEMA SURPRESA)</h3>
+                    
+                    <div class="tema-box" style="background: #222; padding: 15px; border-radius: 8px; border-left: 4px solid var(--secondary); margin-bottom: 15px;">
+                        <p id="tema-redacao" style="color: #fff; font-weight: 600; font-size: 1rem; font-family: 'Segoe UI';">Clique abaixo para sortear um tema...</p>
+                        <button onclick="sortearTema()" class="btn-small-neon" style="margin-top: 10px; cursor: pointer;">SORTEAR NOVO TEMA</button>
+                    </div>
+
+                    <textarea id="redacao-input" placeholder="Desenvolva seu texto dissertativo-argumentativo focado na estrutura nota máxima (Introdução, Desenvolvimento e Conclusão)..." rows="12"></textarea>
+                    
                     <button id="avaliar-btn" class="btn-primary" onclick="avaliarRedacao()">ENVIAR PARA AVALIAÇÃO (IA)</button>
                     
-                    <div id="redacao-feedback" class="feedback-content hidden" style="margin-top:20px; text-align: left; padding: 15px; border: 1px solid var(--primary);">
-                        <h4 style="color: var(--primary);">RELATÓRIO DE DESEMPENHO:</h4>
-                        <div id="ai-analysis" style="font-family: 'Segoe UI'; font-size: 0.9rem; line-height: 1.5; color: #ddd;"></div>
+                    <div id="redacao-feedback" class="feedback-content hidden" style="margin-top:20px; text-align: left; padding: 15px; border: 1px solid var(--primary); background: #111;">
+                        <h4 style="color: var(--primary); font-family: 'Orbitron';">RELATÓRIO DE DESEMPENHO:</h4>
+                        <div id="ai-analysis" style="font-family: 'Segoe UI'; font-size: 0.9rem; line-height: 1.6; color: #ddd; white-space: pre-line;"></div>
                     </div>
                 </div>
             </main>
