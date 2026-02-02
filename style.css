@@ -144,6 +144,16 @@ body {
     margin-top: 10px;
     font-size: 1rem;
 }
+/* Efeito para matérias de alto impacto (Pareto) */
+.subject-progress-item[data-priority="high"] span {
+    color: var(--primary);
+    text-shadow: 0 0 8px var(--primary);
+    font-weight: bold;
+}
+
+.subject-progress-item[data-priority="high"] .mini-bar-fill {
+    background: linear-gradient(90deg, #fff, var(--primary));
+}
 
 @keyframes slideUp {
     from { opacity: 0; transform: translateY(10px); }
