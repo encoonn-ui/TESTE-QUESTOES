@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Foco BB - Agente Comercial</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+
+    <div class="app-container">
+        <header>
+            <div class="stats-bar">
+                <div class="stat">
+                    <span class="material-icons">local_fire_department</span>
+                    <span id="streak-counter">0</span> dias
+                </div>
+                <div class="stat">
+                    <span class="material-icons">emoji_events</span>
+                    <span id="xp-counter">0</span> XP
+                </div>
+            </div>
+            <div class="progress-container">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+        </header>
+
+        <main>
+            <div id="question-card" class="card">
+                <div class="card-header">
+                    <span id="subject-tag" class="tag">Matéria</span>
+                    <span id="difficulty-tag" class="tag">Nível</span>
+                </div>
+                
+                <div class="question-text" id="question-text">
+                    Carregando sua próxima questão...
+                </div>
+
+                <div class="options-grid" id="options-container">
+                    </div>
+
+                <div id="feedback-area" class="feedback hidden">
+                    <p id="feedback-message"></p>
+                    <button id="next-btn" onclick="nextQuestion()">Próxima Questão</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <audio id="sound-correct" src="https://actions.google.com/sounds/v1/cartoon/clank_car_crash.ogg"></audio> <audio id="sound-wrong" src="https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg"></audio>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
