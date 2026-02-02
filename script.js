@@ -1,6 +1,6 @@
 import { questions } from './questions.js';
 
-// --- CARREGAMENTO DO "SAVE GAME" E ESTADO TEMPORÁRIO ---
+// --- ESTADO E PERSISTÊNCIA ---
 let xp = parseInt(localStorage.getItem('userXP')) || 0;
 let streak = parseInt(localStorage.getItem('userStreak')) || 0;
 let answeredIds = JSON.parse(localStorage.getItem('answeredIds')) || [];
@@ -14,6 +14,33 @@ const paretoWeights = {
     "Matemática Financeira": 5,
     "Atualidades do Mercado Financeiro": 5
 };
+
+// --- FUNÇÃO DO SOM DE ERRO "DESAGRADÁVEL" ---
+function playDisturbingErrorSound() {
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+
+        // Onda 'sawtooth' (serra) é mais agressiva ao ouvido
+        oscillator.type = 'sawtooth'; 
+        oscillator.frequency.setValueAtTime(120, audioCtx.currentTime); // Frequência baixa e pesada
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime); // Volume controlado mas perceptível
+        oscillator.start();
+        
+        // Duração curta para impacto imediato
+        setTimeout(() => {
+            oscillator.stop();
+            audioCtx.close();
+        }, 350);
+    } catch (e) {
+        console.log("AudioContext não suportado ou bloqueado.");
+    }
+}
 
 function init() {
     updateStats();
@@ -91,34 +118,38 @@ function renderQuestion(q) {
     });
 }
 
-// --- LÓGICA DE CORREÇÃO ATUALIZADA (Sua nova solicitação) ---
+// --- LÓGICA DE CORREÇÃO COM SOM DESAGRADÁVEL NO ERRO ---
 function checkAnswer(idx, q, btn) {
     const isCorrect = idx === q.correct;
-    const sound = document.getElementById(isCorrect ? 'sound-correct' : 'sound-wrong');
     const feedbackArea = document.getElementById('feedback-area');
     const feedbackStatus = document.getElementById('feedback-status');
     
-    sound.currentTime = 0;
-    sound.play().catch(() => {});
-
     if (isCorrect) {
-        // CENÁRIO ACERTO: Sinaliza botão e ABRE o overlay de resumo
+        // SOM DE ACERTO AGRADÁVEL
+        const sound = document.getElementById('sound-correct');
+        sound.currentTime = 0;
+        sound.play().catch(() => {});
+
         btn.classList.add('correct');
         feedbackStatus.innerHTML = '<span class="material-icons" style="vertical-align: middle;">check_circle</span> RESPOSTA';
         feedbackStatus.style.color = "var(--correct)";
         
         document.getElementById('feedback-message').innerText = q.explanation;
-        feedbackArea.classList.remove('hidden'); // Mostra a tela de resumo
+        feedbackArea.classList.remove('hidden');
         
         xp += 50;
         streak += 1;
         answeredIds.push(q.id);
         localStorage.removeItem('currentQuestionId'); 
     } else {
-        // CENÁRIO ERRO: Apenas sinaliza no botão e toca o som
+        // SOM DE ERRO DESAGRADÁVEL (Buzz Eletrônico)
+        playDisturbingErrorSound();
+
         btn.classList.add('wrong');
         streak = 0;
-        // Não removemos o 'hidden' do feedback-area aqui para não abrir a imagem de sucesso
+        // Trepidação visual leve para reforçar o erro
+        btn.style.transform = "translateX(5px)";
+        setTimeout(() => btn.style.transform = "translateX(0)", 100);
     }
 
     updateStats();
