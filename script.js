@@ -208,7 +208,7 @@ async function avaliarRedacao() {
     const btn = document.getElementById('avaliar-btn');
 
     // !!! IMPORTANTE: COLOQUE SUA CHAVE AQUI !!!
-    const API_KEY = "SUA_CHAVE_API_AQUI"; 
+    const API_KEY = "AIzaSyAn6iFEqw9Ka39SeEwUVKvI23TEs7WuCe0"; 
 
     if (texto.length < 50) {
         alert("Texto muito curto para avaliação.");
