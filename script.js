@@ -12,41 +12,52 @@ const paretoWeights = {
     "Informática": 15, 
     "Conhecimentos Bancários": 10,
     "Matemática Financeira": 5,
-    "Atualidades do Mercado Financeiro": 5
+    "Atualidades do Mercado Financeiro": 5,
+    "Português": 10,
+    "Inglês": 5,
+    "Matemática": 5
 };
 
-// --- FUNÇÃO DO SOM DE ERRO "DESAGRADÁVEL" ---
+// --- FUNÇÃO DO SOM DE ERRO (BUZZER) ---
 function playDisturbingErrorSound() {
     try {
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         const oscillator = audioCtx.createOscillator();
         const gainNode = audioCtx.createGain();
 
-        // Onda 'sawtooth' (serra) é mais agressiva ao ouvido
         oscillator.type = 'sawtooth'; 
-        oscillator.frequency.setValueAtTime(120, audioCtx.currentTime); // Frequência baixa e pesada
+        oscillator.frequency.setValueAtTime(120, audioCtx.currentTime); 
         
         oscillator.connect(gainNode);
         gainNode.connect(audioCtx.destination);
 
-        gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime); // Volume controlado mas perceptível
+        gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime); 
         oscillator.start();
         
-        // Duração curta para impacto imediato
         setTimeout(() => {
             oscillator.stop();
             audioCtx.close();
         }, 350);
-    } catch (e) {
-        console.log("AudioContext não suportado ou bloqueado.");
-    }
+    } catch (e) { console.log("Áudio bloqueado."); }
 }
 
 function init() {
     updateStats();
     
+    // Verifica trava de sessão
     if (currentQuestionId) {
-        const savedQ = questions.find(q => q.id == currentQuestionId);
+        // Tenta achar nas locais
+        let savedQ = questions.find(q => q.id == currentQuestionId);
+        
+        // Se não achar nas locais, tenta recuperar do cache da IA (SessionStorage)
+        if (!savedQ) {
+            const cachedIA = sessionStorage.getItem('lastIAQuestion');
+            if (cachedIA) {
+                const parsedIA = JSON.parse(cachedIA);
+                if (parsedIA.id == currentQuestionId) savedQ = parsedIA;
+            }
+        }
+
         if (savedQ && !answeredIds.includes(savedQ.id)) {
             renderQuestion(savedQ);
         } else {
@@ -65,7 +76,19 @@ function setupNavigation() {
         if (historyIds.length > 1) {
             historyIds.pop(); 
             const prevId = historyIds[historyIds.length - 1]; 
-            const prevQ = questions.find(q => q.id == prevId);
+            
+            // Procura na base local
+            let prevQ = questions.find(q => q.id == prevId);
+            
+            // Se não achar, procura no cache de IA
+            if (!prevQ) {
+                const cachedIA = sessionStorage.getItem('lastIAQuestion');
+                if (cachedIA) {
+                    const parsed = JSON.parse(cachedIA);
+                    if (parsed.id == prevId) prevQ = parsed;
+                }
+            }
+
             if (prevQ) {
                 localStorage.setItem('currentQuestionId', prevQ.id);
                 sessionStorage.setItem('historyIds', JSON.stringify(historyIds));
@@ -77,12 +100,17 @@ function setupNavigation() {
     };
 }
 
+// --- FUNÇÃO PADRÃO: CARREGA QUESTÃO LOCAL ---
 function loadRandomQuestion() {
-    const available = questions.filter(q => !answeredIds.includes(q.id));
+    let available = questions.filter(q => !answeredIds.includes(q.id));
     
     if (available.length === 0) {
-        document.getElementById('question-text').innerText = "VOCÊ DOMINOU O EDITAL! RESETE PARA RECOMEÇAR.";
-        return;
+        alert("PARABÉNS! VOCÊ FECHOU O EDITAL LOCAL! 🏆\n\nReiniciando as barras para revisão...");
+        answeredIds = [];
+        localStorage.setItem('answeredIds', JSON.stringify(answeredIds));
+        xp += 1000;
+        updateStats(); 
+        available = questions;
     }
 
     let weightedPool = [];
@@ -92,20 +120,33 @@ function loadRandomQuestion() {
     });
 
     const q = weightedPool[Math.floor(Math.random() * weightedPool.length)];
+    salvarEstadoQuestao(q);
+    renderQuestion(q);
+}
+
+function salvarEstadoQuestao(q) {
     localStorage.setItem('currentQuestionId', q.id);
-    
     if (historyIds[historyIds.length - 1] !== q.id) {
         historyIds.push(q.id);
         sessionStorage.setItem('historyIds', JSON.stringify(historyIds));
     }
-
-    renderQuestion(q);
 }
 
 function renderQuestion(q) {
     const container = document.getElementById('options-container');
     document.getElementById('question-text').innerText = q.text;
-    document.getElementById('subject-tag').innerText = q.subject;
+    
+    const tag = document.getElementById('subject-tag');
+    tag.innerText = q.subject;
+    
+    // Se for IA, muda a cor da tag para diferenciar
+    if (q.id > 90000) {
+        tag.style.background = "linear-gradient(90deg, #667eea, #764ba2)";
+        tag.innerText = "🤖 IA: " + q.subject;
+    } else {
+        tag.style.background = "rgba(0, 243, 255, 0.1)"; // Cor original
+    }
+
     document.getElementById('feedback-area').classList.add('hidden');
     container.innerHTML = '';
 
@@ -118,18 +159,91 @@ function renderQuestion(q) {
     });
 }
 
-// --- LÓGICA DE CORREÇÃO COM SOM DESAGRADÁVEL NO ERRO ---
+// --- A NOVA FUNÇÃO: GERADOR DE IA ---
+window.gerarQuestaoIA = async () => {
+    const btn = document.getElementById('btn-gerar-ia');
+    const loadingText = document.getElementById('ai-loading-text');
+    const questionText = document.getElementById('question-text');
+    const container = document.getElementById('options-container');
+
+    // Estado de Carregamento
+    btn.disabled = true;
+    btn.style.opacity = "0.7";
+    btn.innerHTML = '<span class="material-icons spin">sync</span> CONECTANDO SATÉLITE...';
+    questionText.innerText = "A Inteligência Artificial está analisando o Edital da Cesgranrio para criar um desafio inédito...";
+    container.innerHTML = '';
+
+    const assuntos = [
+        "Vendas e Negociação (Ética, Gatilhos Mentais, CDC)", 
+        "Informática (Segurança da Informação, Excel, Redes)", 
+        "Conhecimentos Bancários (Pix, Open Finance, SFN)",
+        "Matemática Financeira (Sistema Price, Juros Compostos)",
+        "Atualidades do Mercado (ESG, Criptomoedas, Lei do Superendividamento)",
+        "Português (Crase, Concordância, Regência)",
+        "Inglês Técnico Bancário"
+    ];
+    const assunto = assuntos[Math.floor(Math.random() * assuntos.length)];
+    const idAleatorio = Math.floor(Math.random() * 10000) + 90000; // IDs altos para identificar que é IA
+
+    const prompt = `Crie uma questão de múltipla escolha INÉDITA, DIFÍCIL e com pegadinhas, estilo banca Cesgranrio, sobre: ${assunto}.
+    IMPORTANTE: Retorne APENAS um objeto JSON válido (sem markdown) neste formato exato:
+    {
+        "id": ${idAleatorio},
+        "subject": "${assunto}",
+        "text": "Enunciado da questão...",
+        "options": ["Alternativa A", "Alternativa B", "Alternativa C", "Alternativa D", "Alternativa E"],
+        "correct": 2, 
+        "explanation": "Explicação curta e didática."
+    }
+    Nota: 'correct' é o índice (0 a 4).`;
+
+    const API_KEY = "AIzaSyAn6iFEqw9Ka39SeEwUVKvI23TEs7WuCe0"; // Sua chave
+
+    try {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        });
+
+        const data = await response.json();
+        let rawText = data.candidates[0].content.parts[0].text;
+        
+        // Limpeza de Markdown (caso a IA mande ```json ... ```)
+        rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+        
+        const novaQuestao = JSON.parse(rawText);
+        
+        // Salva no Cache de Sessão para o F5 não perder a questão da IA
+        sessionStorage.setItem('lastIAQuestion', JSON.stringify(novaQuestao));
+        
+        salvarEstadoQuestao(novaQuestao);
+        renderQuestion(novaQuestao);
+
+    } catch (error) {
+        console.error(error);
+        questionText.innerText = "Falha na comunicação com a IA. Verifique sua internet.";
+        setTimeout(() => loadRandomQuestion(), 2000); // Volta para questão normal em caso de erro
+    } finally {
+        btn.disabled = false;
+        btn.style.opacity = "1";
+        btn.innerHTML = '<span class="material-icons">auto_awesome</span> GERAR OUTRA QUESTÃO';
+        loadingText.innerText = "Questão gerada com sucesso via Gemini AI.";
+    }
+};
+
 function checkAnswer(idx, q, btn) {
     const isCorrect = idx === q.correct;
+    const sound = document.getElementById(isCorrect ? 'sound-correct' : 'sound-wrong');
     const feedbackArea = document.getElementById('feedback-area');
     const feedbackStatus = document.getElementById('feedback-status');
     
-    if (isCorrect) {
-        // SOM DE ACERTO AGRADÁVEL
-        const sound = document.getElementById('sound-correct');
+    if(isCorrect) {
         sound.currentTime = 0;
-        sound.play().catch(() => {});
+        sound.play().catch(()=>{});
+    }
 
+    if (isCorrect) {
         btn.classList.add('correct');
         feedbackStatus.innerHTML = '<span class="material-icons" style="vertical-align: middle;">check_circle</span> RESPOSTA';
         feedbackStatus.style.color = "var(--correct)";
@@ -140,14 +254,14 @@ function checkAnswer(idx, q, btn) {
         xp += 50;
         streak += 1;
         answeredIds.push(q.id);
+        
+        // Se acertou uma da IA, salva como respondida para não repetir (mesmo sendo raro)
+        localStorage.setItem('answeredIds', JSON.stringify(answeredIds));
         localStorage.removeItem('currentQuestionId'); 
     } else {
-        // SOM DE ERRO DESAGRADÁVEL (Buzz Eletrônico)
         playDisturbingErrorSound();
-
         btn.classList.add('wrong');
         streak = 0;
-        // Trepidação visual leve para reforçar o erro
         btn.style.transform = "translateX(5px)";
         setTimeout(() => btn.style.transform = "translateX(0)", 100);
     }
@@ -175,16 +289,23 @@ function renderSubjectProgress() {
     const list = document.getElementById('subject-progress-list');
     if (!list) return;
     list.innerHTML = '';
-    const subjects = [...new Set(questions.map(q => q.subject))];
+    
+    // Filtra apenas assuntos das questões locais para não poluir a barra com assuntos aleatórios da IA
+    const subjects = Object.keys(paretoWeights); 
+
     subjects.forEach(sub => {
-        const total = questions.filter(q => q.subject === sub).length;
-        const done = questions.filter(q => q.subject === sub && answeredIds.includes(q.id)).length;
-        const pct = Math.round((done / total) * 100) || 0;
+        // Conta quantas questões locais existem desse assunto
+        const total = questions.filter(q => q.subject.includes(sub.split(" ")[0])).length || 10; 
+        const done = questions.filter(q => q.subject.includes(sub.split(" ")[0]) && answeredIds.includes(q.id)).length;
+        
+        // Evita divisão por zero
+        const pct = Math.round((done / (total || 1)) * 100) || 0;
+        
         list.innerHTML += `
             <div class="subject-progress-item">
                 <div style="display:flex; justify-content:space-between">
-                    <span style="color:var(--primary); font-weight:bold; text-shadow:0 0 8px var(--primary);">${sub}</span>
-                    <span style="color:var(--primary); font-weight:bold;">${pct}%</span>
+                    <span style="color:var(--primary); font-weight:bold; text-shadow:0 0 8px var(--primary); font-size: 0.8rem;">${sub}</span>
+                    <span style="color:var(--primary); font-weight:bold; font-size: 0.8rem;">${pct}%</span>
                 </div>
                 <div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${pct}%; background:var(--primary); box-shadow:0 0 10px var(--primary);"></div></div>
             </div>`;
@@ -192,14 +313,14 @@ function renderSubjectProgress() {
 }
 
 window.sortearTema = () => {
-    const temas = ["O impacto do envelhecimento na economia.", "Educação financeira como ferramenta social.", "Privacidade de dados e IA."];
+    const temas = ["O impacto do envelhecimento na economia.", "Educação financeira como ferramenta social.", "Privacidade de dados e IA.", "Sustentabilidade e bancos."];
     document.getElementById('tema-redacao').innerText = "TEMA: " + temas[Math.floor(Math.random() * temas.length)];
 };
 
 window.nextQuestion = () => loadRandomQuestion();
 
 window.resetProgress = () => {
-    if (confirm("Resetar tudo?")) {
+    if (confirm("Resetar tudo (XP e Progresso)?")) {
         localStorage.clear();
         sessionStorage.clear();
         location.reload();
