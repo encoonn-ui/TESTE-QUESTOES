@@ -36,7 +36,7 @@ export const questions = [
     },
 
     // ==========================================================
-    // 2. INFORMÁTICA (Peso 1.5 - Onde a maioria reprova)
+    // 2. INFORMÁTICA (Peso 1.5)
     // ==========================================================
     {
         id: 201,
@@ -72,12 +72,12 @@ export const questions = [
     },
 
     // ==========================================================
-    // 3. CONHECIMENTOS BANCÁRIOS (O Coração do Banco)
+    // 3. CONHECIMENTOS BANCÁRIOS
     // ==========================================================
     {
         id: 301,
         subject: "Conhecimentos Bancários",
-        text: "(SFN) Quem é o órgão NORMATIVO máximo do Sistema Financeiro Nacional (quem manda/define metas)?",
+        text: "(SFN) Quem é o órgão NORMATIVO máximo do Sistema Financeiro Nacional?",
         options: ["Banco Central (Bacen)", "Banco do Brasil", "Conselho Monetário Nacional (CMN)", "CVM", "Febraban"],
         correct: 2,
         explanation: "O CMN define as regras e metas (Normativo). O Bacen executa e fiscaliza (Supervisor)."
@@ -93,14 +93,14 @@ export const questions = [
     {
         id: 303,
         subject: "Conhecimentos Bancários",
-        text: "(Lavagem de Dinheiro) A fase onde o dinheiro sujo volta para a economia com aparência legal (ex: compra de imóveis) é a:",
+        text: "(Lavagem de Dinheiro) A fase onde o dinheiro sujo volta para a economia com aparência legal é a:",
         options: ["Colocação", "Ocultação", "Integração", "Evasão", "Distribuição"],
         correct: 2,
         explanation: "INTEGRAÇÃO é a etapa final, onde o capital é incorporado formalmente ao sistema econômico."
     },
 
     // ==========================================================
-    // 4. MATEMÁTICA FINANCEIRA (Sem medo de calcular)
+    // 4. MATEMÁTICA FINANCEIRA
     // ==========================================================
     {
         id: 401,
@@ -116,7 +116,7 @@ export const questions = [
         text: "(SAC) Já no Sistema de Amortização Constante (SAC), usado em imóveis:",
         options: ["As prestações são fixas.", "A amortização é constante e a prestação diminui com o tempo.", "Os juros aumentam.", "O saldo devedor cresce.", "Não há juros."],
         correct: 1,
-        explanation: "No SAC, você abate o mesmo valor da dívida todo mês (Amortização Constante). Como os juros caem, a prestação fica menor a cada mês."
+        explanation: "No SAC, a amortização é fixa. Como o saldo devedor cai, os juros e a prestação diminuem mensalmente."
     },
     {
         id: 403,
@@ -124,11 +124,11 @@ export const questions = [
         text: "(Juros) Uma taxa nominal de 12% ao ano com capitalização MENSAL resulta em uma taxa efetiva anual:",
         options: ["Igual a 12%.", "Menor que 12%.", "Maior que 12%.", "Igual a 1% a.m.", "Nula."],
         correct: 2,
-        explanation: "Nos Juros Compostos, a capitalização mensal gera 'juros sobre juros', fazendo a taxa efetiva ser maior que a simples soma das taxas mensais."
+        explanation: "Pela incidência de juros compostos mês a mês, a taxa efetiva anual será sempre maior que a taxa nominal."
     },
 
     // ==========================================================
-    // 5. LÍNGUA PORTUGUESA (Gramática e Crase)
+    // 5. LÍNGUA PORTUGUESA
     // ==========================================================
     {
         id: 501,
@@ -136,7 +136,7 @@ export const questions = [
         text: "(Crase) Assinale a opção em que o uso da crase é OBRIGATÓRIO:",
         options: ["Fui a Bahia nas férias.", "Fui a Curitiba a trabalho.", "Fui a Roma antiga dos Césares.", "Fui a casa de meus pais.", "Entreguei a ela."],
         correct: 2,
-        explanation: "Regra do Topônimo Especificado: 'Fui à Roma ANTIGA'. Se o lugar vem qualificado, usa-se crase. 'Fui a Roma' (sozinho) não tem."
+        explanation: "Regra do Topônimo Especificado: 'Fui à Roma ANTIGA'. Se o lugar vem qualificado, usa-se crase."
     },
     {
         id: 502,
@@ -144,19 +144,19 @@ export const questions = [
         text: "(Concordância) Qual frase está correta segundo a norma-culta?",
         options: ["Fazem dois anos que estudo.", "Houveram muitos erros.", "Deve haver soluções para o caso.", "Aluga-se apartamentos.", "Meio-dia e meio."],
         correct: 2,
-        explanation: "'Deve haver' (Haver = existir é impessoal, fica no singular). Erros: 'Faz dois anos', 'Houve erros', 'Alugam-se apartamentos', 'Meio-dia e meia'."
+        explanation: "'Deve haver' (existir) é impessoal. 'Faz dois anos' (tempo corrido) também não vai para o plural."
     },
 
     // ==========================================================
-    // 6. INGLÊS E MATEMÁTICA BÁSICA (Diferencial)
+    // 6. INGLÊS E MATEMÁTICA BÁSICA
     // ==========================================================
     {
         id: 601,
         subject: "Inglês",
         text: "(Vocabulário) No mercado financeiro, o termo 'Spread' refere-se a:",
-        options: ["A taxa de lucro do banco (diferença entre o que paga e o que cobra).", "Uma planilha do Excel.", "Um tipo de investimento.", "O risco de calote.", "Um software de gestão."],
+        options: ["Taxa de lucro do banco.", "Planilha eletrônica.", "Tipo de investimento.", "Risco de crédito.", "Software de gestão."],
         correct: 0,
-        explanation: "Spread bancário é a diferença entre a taxa que o banco paga ao investidor (captação) e a taxa que cobra no empréstimo."
+        explanation: "Spread é a diferença entre o custo de captação do dinheiro e a taxa cobrada pelo banco ao emprestar."
     },
     {
         id: 602,
@@ -164,26 +164,26 @@ export const questions = [
         text: "(Probabilidade) Em uma urna há 3 bolas vermelhas e 7 azuis. Retirando-se uma ao acaso, qual a chance de ser vermelha?",
         options: ["10%", "30%", "50%", "70%", "33%"],
         correct: 1,
-        explanation: "Casos Favoráveis (3) dividido pelo Total (10) = 3/10 = 0,30 ou 30%."
+        explanation: "3 (favoráveis) / 10 (total) = 0,3 ou 30%."
     },
 
     // ==========================================================
-    // 7. ATUALIDADES DO MERCADO (ESG e Inovação)
+    // 7. ATUALIDADES E ESG
     // ==========================================================
     {
         id: 701,
         subject: "Atualidades do Mercado Financeiro",
         text: "(ESG) O conceito de 'Green Bonds' (Títulos Verdes) refere-se a:",
-        options: ["Dólares falsificados.", "Títulos de dívida emitidos para financiar projetos com benefício ambiental.", "Ações de petroleiras.", "Criptomoedas.", "Impostos ambientais."],
+        options: ["Dólares novos.", "Títulos para financiar projetos ambientais.", "Ações de petroleiras.", "Criptomoedas.", "Impostos ambientais."],
         correct: 1,
-        explanation: "Green Bonds são títulos de renda fixa usados exclusivamente para captar recursos para projetos sustentáveis (energia limpa, reflorestamento)."
+        explanation: "São títulos de dívida emitidos especificamente para financiar projetos sustentáveis."
     },
     {
         id: 702,
         subject: "Atualidades do Mercado Financeiro",
-        text: "(Pix) Uma das características principais do Pix que o diferencia de TED/DOC é:",
-        options: ["Funciona apenas em dias úteis.", "Demora 1 hora para compensar.", "Disponibilidade 24/7 e liquidação em tempo real (segundos).", "Custo alto para Pessoa Física.", "Exige cartão de crédito."],
+        text: "(Pix) Uma das características que o diferencia de TED/DOC é:",
+        options: ["Apenas dias úteis.", "Demora 1 hora.", "Disponibilidade 24/7 e liquidação instantânea.", "Custo alto p/ PF.", "Exige cartão."],
         correct: 2,
-        explanation: "O Pix funciona 24 horas por dia, 7 dias por semana, inclusive feriados, e o dinheiro cai na hora."
+        explanation: "O Pix funciona 24 horas por dia, 7 dias por semana, com transferência imediata do valor."
     }
 ];
