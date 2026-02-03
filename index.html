@@ -4,20 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Protocolo Aprovação BB 2026</title>
-    
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
     <div class="level-bar-container">
         <div id="progress-bar-top" class="level-bar-fill"></div>
     </div>
-
     <div class="app-container">
-        
         <header class="stats-header">
             <div class="stat-box">
                 <span class="material-icons icon-xp">bolt</span>
@@ -31,7 +26,6 @@
                 <span class="material-icons">restart_alt</span>
             </button>
         </header>
-
         <main class="question-card">
             <div class="card-header">
                 <span id="subject-tag" class="subject-tag">Carregando...</span>
@@ -39,14 +33,10 @@
                     <span class="dot"></span><span class="dot"></span><span class="dot"></span>
                 </div>
             </div>
-
             <div class="card-body">
                 <p id="question-text">O sistema está buscando a melhor questão para o seu perfil...</p>
             </div>
-
-            <div id="options-container" class="options-grid">
-                </div>
-
+            <div id="options-container" class="options-grid"></div>
             <div class="ai-section">
                 <button id="btn-gerar-ia" onclick="gerarQuestaoIA()" class="btn-ai">
                     <span class="material-icons">auto_awesome</span>
@@ -54,33 +44,26 @@
                 </button>
                 <p id="ai-loading-text" class="ai-hint">Modo Infinito: Crie desafios novos baseados no Edital.</p>
             </div>
-
             <div class="navigation-area">
                 <button id="prev-btn" class="nav-btn"><span class="material-icons">arrow_back</span></button>
                 <span class="nav-label">HISTÓRICO</span>
                 <button id="next-btn" class="nav-btn" onclick="nextQuestion()"><span class="material-icons">arrow_forward</span></button>
             </div>
         </main>
-
         <section class="redacao-section">
             <h3 id="tema-redacao">TEMA: Carregando...</h3>
             <textarea id="redacao-input" placeholder="Escreva seu parágrafo aqui para a IA corrigir..."></textarea>
             <button id="avaliar-btn" onclick="avaliarRedacao()">CORRIGIR COM IA</button>
-            
             <div id="redacao-feedback" class="feedback-box hidden">
                 <h4><span class="material-icons">psychology</span> Análise da Banca:</h4>
                 <p id="ai-analysis"></p>
             </div>
         </section>
-
         <section class="progress-section">
             <h3>SEU DOMÍNIO DO EDITAL</h3>
-            <div id="subject-progress-list">
-                </div>
+            <div id="subject-progress-list"></div>
         </section>
-
     </div>
-
     <div id="feedback-area" class="overlay hidden">
         <div class="overlay-content">
             <div id="feedback-status" class="feedback-title">RESPOSTA</div>
@@ -88,10 +71,8 @@
             <button class="btn-next-level" onclick="nextQuestion()">PRÓXIMA FASE <span class="material-icons">play_arrow</span></button>
         </div>
     </div>
-
     <audio id="sound-correct" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
     <audio id="sound-wrong" src="https://actions.google.com/sounds/v1/cartoon/cartoon_boing.ogg"></audio>
-
     <script type="module" src="script.js"></script>
 </body>
 </html>
