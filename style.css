@@ -1,258 +1,55 @@
-import { questions } from './questions.js';
-
-// --- ESTADO E PERSISTÊNCIA ---
-let xp = parseInt(localStorage.getItem('userXP')) || 0;
-let streak = parseInt(localStorage.getItem('userStreak')) || 0;
-let answeredIds = JSON.parse(localStorage.getItem('answeredIds')) || [];
-let historyIds = JSON.parse(sessionStorage.getItem('historyIds')) || []; 
-let currentQuestionId = localStorage.getItem('currentQuestionId'); 
-
-const paretoWeights = { 
-    "Vendas e Negociação": 15, 
-    "Informática": 15, 
-    "Conhecimentos Bancários": 10,
-    "Matemática Financeira": 5,
-    "Atualidades do Mercado Financeiro": 5,
-    "Português": 10,
-    "Inglês": 5,
-    "Matemática": 5
-};
-
-function playDisturbingErrorSound() {
-    try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-        oscillator.type = 'sawtooth'; 
-        oscillator.frequency.setValueAtTime(120, audioCtx.currentTime); 
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        gainNode.gain.setValueAtTime(0.05, audioCtx.currentTime); 
-        oscillator.start();
-        setTimeout(() => {
-            oscillator.stop();
-            audioCtx.close();
-        }, 350);
-    } catch (e) { console.log("Áudio bloqueado."); }
+:root {
+    --bg-color: #0f0f13;
+    --card-bg: #1a1a24;
+    --primary: #00f3ff;
+    --secondary: #7000ff;
+    --text-color: #e0e0e0;
+    --correct: #00ff88;
+    --wrong: #ff0055;
 }
 
-function init() {
-    updateStats();
-    if (currentQuestionId) {
-        let savedQ = questions.find(q => q.id == currentQuestionId);
-        if (!savedQ) {
-            const cachedIA = sessionStorage.getItem('lastIAQuestion');
-            if (cachedIA) {
-                const parsedIA = JSON.parse(cachedIA);
-                if (parsedIA.id == currentQuestionId) savedQ = parsedIA;
-            }
-        }
-        if (savedQ && !answeredIds.includes(savedQ.id)) {
-            renderQuestion(savedQ);
-        } else {
-            loadRandomQuestion();
-        }
-    } else {
-        loadRandomQuestion();
-    }
-    sortearTema();
-    setupNavigation();
-}
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Roboto', sans-serif; }
 
-function setupNavigation() {
-    document.getElementById('prev-btn').onclick = () => {
-        if (historyIds.length > 1) {
-            historyIds.pop(); 
-            const prevId = historyIds[historyIds.length - 1]; 
-            let prevQ = questions.find(q => q.id == prevId);
-            if (!prevQ) {
-                const cachedIA = sessionStorage.getItem('lastIAQuestion');
-                if (cachedIA) {
-                    const parsed = JSON.parse(cachedIA);
-                    if (parsed.id == prevId) prevQ = parsed;
-                }
-            }
-            if (prevQ) {
-                localStorage.setItem('currentQuestionId', prevQ.id);
-                sessionStorage.setItem('historyIds', JSON.stringify(historyIds));
-                renderQuestion(prevQ);
-            }
-        } else {
-            alert("Início do histórico alcançado!");
-        }
-    };
-}
+body { background-color: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; align-items: center; padding-bottom: 50px; }
 
-function loadRandomQuestion() {
-    let available = questions.filter(q => !answeredIds.includes(q.id));
-    if (available.length === 0) {
-        alert("PARABÉNS! VOCÊ FECHOU O EDITAL LOCAL! 🏆\n\nReiniciando as barras para revisão...");
-        answeredIds = [];
-        localStorage.setItem('answeredIds', JSON.stringify(answeredIds));
-        xp += 1000;
-        updateStats(); 
-        available = questions;
-    }
-    let weightedPool = [];
-    available.forEach(q => {
-        const weight = paretoWeights[q.subject] || 1;
-        for (let i = 0; i < weight; i++) weightedPool.push(q);
-    });
-    const q = weightedPool[Math.floor(Math.random() * weightedPool.length)];
-    salvarEstadoQuestao(q);
-    renderQuestion(q);
-}
+.level-bar-container { width: 100%; height: 6px; background: #000; position: fixed; top: 0; z-index: 999; }
+.level-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary), var(--secondary)); width: 0%; transition: width 0.5s ease; }
 
-function salvarEstadoQuestao(q) {
-    localStorage.setItem('currentQuestionId', q.id);
-    if (historyIds[historyIds.length - 1] !== q.id) {
-        historyIds.push(q.id);
-        sessionStorage.setItem('historyIds', JSON.stringify(historyIds));
-    }
-}
+.app-container { width: 100%; max-width: 450px; padding: 15px; margin-top: 15px; }
 
-function renderQuestion(q) {
-    const container = document.getElementById('options-container');
-    document.getElementById('question-text').innerText = q.text;
-    const tag = document.getElementById('subject-tag');
-    tag.innerText = q.subject;
-    if (q.id > 90000) {
-        tag.style.background = "linear-gradient(90deg, #667eea, #764ba2)";
-        tag.innerText = "🤖 IA: " + q.subject;
-    } else {
-        tag.style.background = "rgba(0, 243, 255, 0.1)";
-    }
-    document.getElementById('feedback-area').classList.add('hidden');
-    container.innerHTML = '';
-    q.options.forEach((opt, i) => {
-        const btn = document.createElement('button');
-        btn.className = 'option-btn';
-        btn.innerText = opt;
-        btn.onclick = () => checkAnswer(i, q, btn);
-        container.appendChild(btn);
-    });
-}
+.stats-header { display: flex; justify-content: space-between; background: var(--card-bg); padding: 12px; border-radius: 12px; border: 1px solid #333; margin-bottom: 15px; }
+.stat-box { display: flex; align-items: center; font-family: 'Orbitron', sans-serif; font-size: 1.1rem; }
+.icon-xp { color: var(--primary); margin-right: 5px; }
+.icon-fire { color: #ff9d00; margin-right: 5px; }
 
-window.gerarQuestaoIA = async () => {
-    const btn = document.getElementById('btn-gerar-ia');
-    const loadingText = document.getElementById('ai-loading-text');
-    const questionText = document.getElementById('question-text');
-    const container = document.getElementById('options-container');
-    btn.disabled = true;
-    btn.style.opacity = "0.7";
-    btn.innerHTML = '<span class="material-icons">sync</span> CONECTANDO...';
-    questionText.innerText = "A IA está gerando um desafio inédito para você...";
-    container.innerHTML = '';
-    const assuntos = ["Vendas", "Informática", "Bancários", "Matemática Financeira", "Português", "Inglês"];
-    const assunto = assuntos[Math.floor(Math.random() * assuntos.length)];
-    const idAleatorio = Math.floor(Math.random() * 10000) + 90000;
-    const prompt = `Crie uma questão objetiva de múltipla escolha para o Banco do Brasil, estilo Cesgranrio, sobre: ${assunto}. Retorne APENAS um JSON: {"id": ${idAleatorio}, "subject": "${assunto}", "text": "...", "options": ["A","B","C","D","E"], "correct": 0, "explanation": "..."}`;
-    const API_KEY = "AIzaSyAn6iFEqw9Ka39SeEwUVKvI23TEs7WuCe0"; 
-    try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-        });
-        const data = await response.json();
-        let rawText = data.candidates[0].content.parts[0].text;
-        rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-        const novaQuestao = JSON.parse(rawText);
-        sessionStorage.setItem('lastIAQuestion', JSON.stringify(novaQuestao));
-        salvarEstadoQuestao(novaQuestao);
-        renderQuestion(novaQuestao);
-    } catch (error) {
-        questionText.innerText = "Erro ao conectar com a IA.";
-        setTimeout(() => loadRandomQuestion(), 2000);
-    } finally {
-        btn.disabled = false;
-        btn.style.opacity = "1";
-        btn.innerHTML = '<span class="material-icons">auto_awesome</span> GERAR OUTRA QUESTÃO';
-        loadingText.innerText = "Pronto!";
-    }
-};
+.question-card { background: var(--card-bg); border-radius: 15px; padding: 20px; border: 1px solid #333; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.subject-tag { background: rgba(0, 243, 255, 0.1); color: var(--primary); padding: 4px 10px; border-radius: 10px; font-size: 0.75rem; font-weight: bold; border: 1px solid var(--primary); }
+.back-btn { background: none; border: none; color: #fff; cursor: pointer; }
 
-function checkAnswer(idx, q, btn) {
-    const isCorrect = idx === q.correct;
-    const sound = document.getElementById(isCorrect ? 'sound-correct' : 'sound-wrong');
-    if(isCorrect) {
-        sound.currentTime = 0;
-        sound.play().catch(()=>{});
-        btn.classList.add('correct');
-        document.getElementById('feedback-status').innerText = "RESPOSTA CORRETA";
-        document.getElementById('feedback-status').style.color = "var(--correct)";
-        document.getElementById('feedback-message').innerText = q.explanation;
-        document.getElementById('feedback-area').classList.remove('hidden');
-        xp += 50;
-        streak += 1;
-        answeredIds.push(q.id);
-        localStorage.removeItem('currentQuestionId'); 
-    } else {
-        playDisturbingErrorSound();
-        btn.classList.add('wrong');
-        streak = 0;
-    }
-    updateStats();
-}
+#question-text { font-size: 1rem; line-height: 1.5; margin-bottom: 20px; }
 
-function updateStats() {
-    localStorage.setItem('userXP', xp);
-    localStorage.setItem('userStreak', streak);
-    localStorage.setItem('answeredIds', JSON.stringify(answeredIds));
-    document.getElementById('xp-counter').innerText = xp;
-    document.getElementById('streak-counter').innerText = streak;
-    const progressBarTop = document.getElementById('progress-bar-top');
-    if (progressBarTop) {
-        const progress = (xp % 1000) / 10;
-        progressBarTop.style.width = `${progress}%`;
-    }
-    renderSubjectProgress();
-}
+.options-grid { display: flex; flex-direction: column; gap: 10px; }
+.option-btn { background: #252533; border: 1px solid #444; color: #ccc; padding: 14px; border-radius: 10px; text-align: left; cursor: pointer; font-size: 0.9rem; }
+.option-btn.correct { border-color: var(--correct); color: var(--correct); }
+.option-btn.wrong { border-color: var(--wrong); color: var(--wrong); animation: shake 0.3s; }
 
-function renderSubjectProgress() {
-    const list = document.getElementById('subject-progress-list');
-    if (!list) return;
-    list.innerHTML = '';
-    const subjects = Object.keys(paretoWeights); 
-    subjects.forEach(sub => {
-        const total = questions.filter(q => q.subject.includes(sub.split(" ")[0])).length || 1; 
-        const done = questions.filter(q => q.subject.includes(sub.split(" ")[0]) && answeredIds.includes(q.id)).length;
-        const pct = Math.round((done / total) * 100) || 0;
-        list.innerHTML += `<div class="subject-progress-item"><div style="display:flex; justify-content:space-between"><span style="color:var(--primary); font-size:0.8rem;">${sub}</span><span style="color:var(--primary); font-size:0.8rem;">${pct}%</span></div><div class="mini-bar-bg"><div class="mini-bar-fill" style="width:${pct}%; background:var(--primary);"></div></div></div>`;
-    });
-}
+.btn-ai { width: 100%; background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; padding: 14px; border: none; border-radius: 10px; font-weight: bold; margin-top: 20px; cursor: pointer; }
 
-window.sortearTema = () => {
-    const temas = ["Estatuto PcD", "ESG nos Bancos", "Segurança Digital"];
-    document.getElementById('tema-redacao').innerText = "TEMA: " + temas[Math.floor(Math.random() * temas.length)];
-};
+.overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; display: flex; justify-content: center; align-items: center; }
+.hidden { display: none; }
+.overlay-content { background: var(--card-bg); padding: 25px; border-radius: 15px; border: 2px solid var(--primary); text-align: center; max-width: 90%; }
+.feedback-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 15px; }
+.feedback-text { font-size: 0.9rem; color: #ddd; margin-bottom: 20px; }
+.btn-next-level { background: var(--primary); color: #000; border: none; padding: 12px 24px; border-radius: 20px; font-weight: bold; cursor: pointer; }
 
-window.nextQuestion = () => loadRandomQuestion();
+.progress-section { margin-top: 20px; }
+.progress-section h3 { font-size: 0.8rem; color: #666; margin-bottom: 10px; text-transform: uppercase; }
+.mini-bar-bg { width: 100%; height: 4px; background: #222; margin-top: 4px; }
+.mini-bar-fill { height: 100%; transition: width 0.5s; }
 
-window.resetProgress = () => {
-    if (confirm("Resetar tudo?")) {
-        localStorage.clear();
-        sessionStorage.clear();
-        location.reload();
-    }
-};
+.redacao-section { margin-top: 20px; background: var(--card-bg); padding: 15px; border-radius: 12px; }
+textarea { width: 100%; height: 80px; background: #111; border: 1px solid #333; color: #fff; padding: 10px; border-radius: 8px; margin: 10px 0; }
+#avaliar-btn { width: 100%; background: #333; color: #fff; padding: 10px; border: none; border-radius: 8px; cursor: pointer; }
 
-window.avaliarRedacao = async () => {
-    const texto = document.getElementById('redacao-input').value;
-    const API_KEY = "AIzaSyAn6iFEqw9Ka39SeEwUVKvI23TEs7WuCe0"; 
-    if (texto.length < 50) return alert("Texto muito curto.");
-    try {
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: `Avalie como banca Cesgranrio: ${texto}` }] }] })
-        });
-        const data = await response.json();
-        document.getElementById('ai-analysis').innerText = data.candidates[0].content.parts[0].text;
-        document.getElementById('redacao-feedback').classList.remove('hidden');
-        xp += 200;
-        updateStats();
-    } catch (e) { alert("Erro na IA."); }
-};
-
-init();
+@keyframes shake { 0%, 100% {transform: translateX(0);} 25% {transform: translateX(-5px);} 75% {transform: translateX(5px);} }
